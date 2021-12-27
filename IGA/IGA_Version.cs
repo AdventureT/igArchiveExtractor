@@ -15,6 +15,8 @@ namespace IGAE_GUI
 		SkylandersTrapTeam				= 0x0000000B,		//Is also Superchargers yet different from superchargers
 		SkylandersSuperChargers			= 0x1000000B,		//The 1 is added to differentiate the two, but they do all have version 0x0B for some reason
 		SkylandersImaginatorsPS4		= 0x2000000B,		//The 2 is added to differentiate the two, but they do all have version 0x0B for some reason
-		CrashNST						= 0x0000000C		
+		//CrashNST						= 0x0000000B,
+		SkylandersImaginatorsSwitch		= 0x0000000C,
+		CTRNF							= 0x0000000D
 	}
 }

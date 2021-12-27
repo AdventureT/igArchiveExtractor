@@ -391,6 +391,10 @@ namespace IGAE_GUI
 		{
 			OpenIGAFile(IGA_Version.SkylandersLostIslands);
 		}
+		private void OpenFile_NST_ToolStripMeniItem_Click(object sender, EventArgs e)
+		{
+			OpenIGAFile(IGA_Version.SkylandersTrapTeam);
+		}
 
 		private void OpenFolder_SSAWii_3DS_ToolStripMenuItem_Click(object sender, EventArgs e)
 		{
@@ -424,6 +428,12 @@ namespace IGAE_GUI
 		{
 			OpenFolder(IGA_Version.SkylandersLostIslands);
 		}
-		#endregion
-	}
+
+        #endregion
+
+        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
+        }
+    }
 }

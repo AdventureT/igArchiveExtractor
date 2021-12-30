@@ -41,19 +41,18 @@ namespace IGAE_GUI.IGZ
 
 		public IGZ_File(string filePath)
 		{
-			FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+			var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
 
-			byte[] readBuffer = new byte[0x04];
+            byte[] readBuffer = new byte[0x04];
+            fs.Read(readBuffer, 0, readBuffer.Length);
 
-			fs.Read(readBuffer, 0x00, 0x04);
-
-			StreamHelper.Endianness endianness = StreamHelper.Endianness.Little;
+            StreamHelper.Endianness endianness = StreamHelper.Endianness.Little;
 
 			if (BitConverter.ToUInt32(readBuffer, 0) == 0x015A4749) endianness = StreamHelper.Endianness.Big;
-			else if (BitConverter.ToUInt32(readBuffer, 0) == 0x48475A01) endianness = StreamHelper.Endianness.Little;
-			else throw new InvalidOperationException("File is corrupt.");
+            else if (BitConverter.ToUInt32(readBuffer, 0) == 0x49475A01) endianness = StreamHelper.Endianness.Little;
+            else throw new InvalidOperationException("File is corrupt.");
 
-			ebr = new StreamHelper(fs, endianness);
+            ebr = new StreamHelper(fs, endianness);
 
 			version = ebr.ReadUInt32();
 			crc = ebr.ReadUInt32();

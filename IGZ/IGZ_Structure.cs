@@ -54,6 +54,14 @@ namespace IGAE_GUI
 				0x00000000,			//The location of the start of the tags in the first chunk
 				0x0000006C,			//Location of texture meta data in chunk 1 (technicaally it starts in chunk 2 but i messed up so yeah deal with it)
 			},
+			//Version 10
+			new uint[]
+			{
+				0x0000056C,			//The location of the attributes
+				0x00000018,			//The location where the chunk descriptors start
+				0x00000000,			//The location of the start of the tags in the first chunk
+				0x0000006C,			//Location of texture meta data in chunk 1 (technicaally it starts in chunk 2 but i messed up so yeah deal with it)
+			}
 		};
 	}
 }

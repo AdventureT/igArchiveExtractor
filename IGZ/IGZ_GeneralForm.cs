@@ -14,12 +14,13 @@ namespace IGAE_GUI.IGZ
 {
 	public partial class IGZ_GeneralForm : Form
 	{
-		TreeNode fixups = new TreeNode("Fixups");
-		TreeNode objects = new TreeNode("Object List");
+		TreeNode fixups = new("Fixups");
+		TreeNode objects = new("Object List");
 		IGZ_File _igz;
 
-		List<TreeNode> filtered = new List<TreeNode>();
-		List<TreeNode> unfiltered = new List<TreeNode>();
+		private Dictionary<TreeNode, igObject> igObjectMap = new();
+		List<TreeNode> filtered = new();
+		List<TreeNode> unfiltered = new();
 
 		public IGZ_GeneralForm(IGZ_File igz)
 		{
@@ -178,11 +179,12 @@ namespace IGAE_GUI.IGZ
 					}
 				}
 				//potentialParentNode = objects.Nodes.Add($"{i.ToString("X04")} : {(rvtb.offsets[i+1]).ToString("X08")} : {objs[i].length.ToString("X08")} => {objectType}");
-				unfiltered.Add(new TreeNode(objs[i].offset.ToString("X04") + ": " + objectType));
-				if(objectType == "igImage2")
-                {
-                	filtered.Add(new TreeNode(objs[i].offset.ToString("X04") + ": " + objectType));
-                }
+				
+				var treeNode = new TreeNode(objs[i].offset.ToString("X04") + ": " + objectType);
+				igObjectMap.Add(treeNode, objs[i]);
+				unfiltered.Add(treeNode);
+				if(objectType == "igImage2") filtered.Add(treeNode);
+                
 				//Console.WriteLine(i.ToString("X04") + " : " + objs[i].children.Count);
 				for(uint j = 0; j < objs[i].children.Count; j++)
 				{
@@ -241,8 +243,7 @@ namespace IGAE_GUI.IGZ
 				if(sfd.ShowDialog() == DialogResult.OK)
 				{
 					FileStream ofs = new FileStream(sfd.FileName, FileMode.Create, FileAccess.ReadWrite);
-					int objectIndex = treeItems.SelectedNode.Parent.Nodes.IndexOf(treeItems.SelectedNode);
-					(_igz.objectList._objects[objectIndex] as igImage2).Extract(ofs);
+					(igObjectMap[treeItems.SelectedNode] as igImage2)?.Extract(ofs);
 					ofs.Close();
 				}
 			}

@@ -190,24 +190,29 @@ namespace IGAE_GUI.IGZ
 				//potentialParentNode = objects.Nodes.Add($"{i.ToString("X04")} : {(rvtb.offsets[i+1]).ToString("X08")} : {objs[i].length.ToString("X08")} => {objectType}");
 				
 				long DeserializeOffset(int offset) {
-					if (_igz.version <= 0x06) return _igz.descriptors[offset >> 0x18].offset + (offset & 0x00FFFFFF);
-					return _igz.descriptors[offset >> 0x1B].offset + (offset & 0x00FFFFFF);
+					if (_igz.version <= 0x06) return _igz.descriptors[(offset >> 0x18) + 1].offset + (offset & 0x00FFFFFF);
+					return _igz.descriptors[offset >> 0x1B].offset + ((offset & 0x07FFFFFF) + 1);
 				}
 				
-				// TODO: read name
-				var nameTable = _igz.fixups.First(x => x.magicNumber == 0x52545352) as IGZ_RSTR;
 				var name = igObject.offset.ToString("X04") + ": " + objectType;
-				try
-				{
-					var pointerToStringPointer = nameTable.offsets[igObject.name];
-					
-					if (pointerToStringPointer != 0) {
-						_igz.ebr.BaseStream.Seek(DeserializeOffset((int)pointerToStringPointer), SeekOrigin.Begin);
-						name = _igz.ebr.ReadString();
+				if (igObject is igImage2) {
+					var nameTable = _igz.fixups.First(x => x.magicNumber == 0x52545352) as IGZ_RSTR;
+					try {
+						_igz.ebr.BaseStream.Seek(igObject.offset + 0x8, SeekOrigin.Begin); // seek to igImage 2 + 8
+						var namePointer = DeserializeOffset((int)_igz.ebr.ReadUInt32()); // read a uint32 and deserialize that
+						_igz.ebr.BaseStream.Seek(namePointer, SeekOrigin.Begin); // seek to that offset
+						name = _igz.ebr.ReadString(); // read a string
+
+						// var pointerToStringPointer = nameTable.offsets[igObject.name];
+						//
+						// if (pointerToStringPointer != 0) {
+						// 	_igz.ebr.BaseStream.Seek(DeserializeOffset((int) _igz.ebr.ReadUInt32()), SeekOrigin.Begin);
+						// 	name = _igz.ebr.ReadString();
+						// }
 					}
-				}
-				catch (Exception) {
-					// ignored
+					catch (Exception) {
+						// ignored
+					}
 				}
 				
 				var treeNode = new TreeNode(name);

@@ -230,22 +230,16 @@ namespace IGAE_GUI.IGZ
 
 		void SelectionChange(object sender, TreeViewEventArgs e)
 		{
-			if(treeItems.SelectedNode.Parent == objects)
-			{
-                Console.WriteLine($"Testing {treeItems.SelectedNode.Text.Split(":")[0]}");
-                int objectOffset = int.Parse(treeItems.SelectedNode.Text.Split(":")[0], System.Globalization.NumberStyles.HexNumber);
-                Console.WriteLine($"offset {objectOffset.ToString("X08")}");
-                //int objectIndex = treeItems.SelectedNode.Parent.Nodes.IndexOf(treeItems.SelectedNode);
-                uint[] offsets = (_igz.fixups.First(x => x.magicNumber == 0x52565442) as IGZ_RVTB).offsets;
-				int objectIndex = Array.FindIndex<uint>(offsets, 0, x => x == objectOffset) - 1;
-                Console.WriteLine($"index {objectIndex} {_igz.objectList._objects[objectIndex].GetType().ToString()}");
-                if(_igz.objectList._objects[objectIndex].GetType() == typeof(igImage2))
+			if(treeItems.SelectedNode.Parent == objects) {
+				var igObject = igObjectMap[treeItems.SelectedNode];
+
+				if(igObject.GetType() == typeof(igImage2))
 				{
 					Console.WriteLine("igImage2 Selected");
 					MemoryStream msImage = new MemoryStream();
-					(_igz.objectList._objects[objectIndex] as igImage2).Extract(msImage);
+					(igObject as igImage2).Extract(msImage);
 					msImage.Seek(0x00, SeekOrigin.Begin);
-					pbTexturePreview.Image = IGAE_GUI.Utils.TextureHelper.BitmapFromDDS(msImage);
+					pbTexturePreview.Image = Utils.TextureHelper.BitmapFromDDS(msImage);
 					pbTexturePreview.Visible = true;
 					btnTextureExtract.Visible = true;
 					btnTextureReplace.Visible = true;
@@ -274,6 +268,8 @@ namespace IGAE_GUI.IGZ
 			{
 				sfd.Filter = "DirectDraw Surface Files (*.dds)|*.dds|All Files (*.*)|*.*";
 				sfd.RestoreDirectory = true;
+				if (treeItems.SelectedNode.FullPath != "")
+					sfd.FileName = treeItems.SelectedNode.FullPath.Replace("\\", "/")[(treeItems.SelectedNode.FullPath.LastIndexOf("/", StringComparison.Ordinal) + 1)..].Replace(".png", ".dds");
 
 				if(sfd.ShowDialog() == DialogResult.OK)
 				{

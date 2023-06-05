@@ -105,6 +105,13 @@ namespace IGAE_GUI.IGZ
 							fixups.Nodes[fixups.Nodes.Count - 1].Nodes.Add($"{rvtb.offsets[i].ToString("X08")}");
 						}
 						break;
+					case 0x52545352:
+						IGZ_RSTR rstr = fixup as IGZ_RSTR;
+						for(uint i = 0; i < rstr.count; i++)
+						{
+							fixups.Nodes[fixups.Nodes.Count - 1].Nodes.Add($"{rstr.offsets[i]:X08}");
+						}
+						break;
 					case 0x544D484E:
 						IGZ_TMHN tmhn = fixup as IGZ_TMHN;
 						for(uint i = 0; i < tmhn.count; i++)
@@ -154,12 +161,14 @@ namespace IGAE_GUI.IGZ
 			for(int i = 0; i < objs.Length; i++)
 			{
 				string objectType;
+				var igObject = objs[i];
+				
 				if(_igz.version <= 0x09)
 				{
 					IGZ_TMET types = _igz.fixups.First(x => x.magicNumber == 0x544D4554) as IGZ_TMET;
 					try
 					{
-						objectType = types.typeNames[objs[i].name];
+						objectType = types.typeNames[igObject.name];
 					}
 					catch (Exception)
 					{
@@ -171,28 +180,49 @@ namespace IGAE_GUI.IGZ
 					IGZ_TSTR strings = _igz.fixups.First(x => x.magicNumber == 0x54535452) as IGZ_TSTR;
 					try
 					{
-						objectType = strings.strings[objs[i].name];
+						objectType = strings.strings[igObject.name];
 					}
 					catch (Exception)
 					{
-						objectType = objs[(int)i].name.ToString("X08");
+						objectType = objs[i].name.ToString("X08");
 					}
 				}
 				//potentialParentNode = objects.Nodes.Add($"{i.ToString("X04")} : {(rvtb.offsets[i+1]).ToString("X08")} : {objs[i].length.ToString("X08")} => {objectType}");
 				
-				var treeNode = new TreeNode(objs[i].offset.ToString("X04") + ": " + objectType);
-				igObjectMap.Add(treeNode, objs[i]);
+				long DeserializeOffset(int offset) {
+					if (_igz.version <= 0x06) return _igz.descriptors[offset >> 0x18].offset + (offset & 0x00FFFFFF);
+					return _igz.descriptors[offset >> 0x1B].offset + (offset & 0x00FFFFFF);
+				}
+				
+				// TODO: read name
+				var nameTable = _igz.fixups.First(x => x.magicNumber == 0x52545352) as IGZ_RSTR;
+				var name = igObject.offset.ToString("X04") + ": " + objectType;
+				try
+				{
+					var pointerToStringPointer = nameTable.offsets[igObject.name];
+					
+					if (pointerToStringPointer != 0) {
+						_igz.ebr.BaseStream.Seek(DeserializeOffset((int)pointerToStringPointer), SeekOrigin.Begin);
+						name = _igz.ebr.ReadString();
+					}
+				}
+				catch (Exception) {
+					// ignored
+				}
+				
+				var treeNode = new TreeNode(name);
+				igObjectMap.Add(treeNode, igObject);
 				unfiltered.Add(treeNode);
 				if(objectType == "igImage2") filtered.Add(treeNode);
                 
 				//Console.WriteLine(i.ToString("X04") + " : " + objs[i].children.Count);
-				for(uint j = 0; j < objs[i].children.Count; j++)
+				for(uint j = 0; j < igObject.children.Count; j++)
 				{
-					AddObject(objs[i].children.ToArray());
+					AddObject(igObject.children.ToArray());
 				}
 			}
 		}
-		
+
 		void SelectionChange(object sender, TreeViewEventArgs e)
 		{
 			if(treeItems.SelectedNode.Parent == objects)

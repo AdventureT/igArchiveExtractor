@@ -185,6 +185,13 @@ namespace IGAE_GUI.IGZ
 						mtsz.magicNumber = 0x4D54535A;
 						fixups.Add(mtsz);
 						break;
+					case 0x0E: {
+						IGZ_RSTR rstr = new IGZ_RSTR();
+						rstr.Process(ebr, this);
+						rstr.magicNumber = 0x52545352;
+						fixups.Add(rstr);
+						break;
+					}
 					//case 0x0D: (Unknown, Couldn't find any uses)
 					//case 0x0E: (Unknown, Packed Ints)
 					//case 0x0F: (Unknown, Packed Ints)

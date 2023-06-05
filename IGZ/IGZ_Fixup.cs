@@ -166,8 +166,7 @@ namespace IGAE_GUI.IGZ {
         }
     }
 
-    //Root Virtual Table
-    public class IGZ_RVTB : IGZ_Fixup {
+    public class IgzOffsetMapFixup : IGZ_Fixup {
         public uint[] offsets;
         public int sectionSpan = 1;
 
@@ -227,13 +226,16 @@ namespace IGAE_GUI.IGZ {
         }
     }
 
+    //Root Virtual Table
+    public class IGZ_RVTB : IgzOffsetMapFixup {}
 
-    //No idea
-    public class IGZ_RSTR : IGZ_Fixup {
-        //No idea
-    }
+    // String Offset Table
+    public class IGZ_RSTR : IgzOffsetMapFixup {}
+    
+    // String Offset Table 2??
+    public class IGZ_RSTT : IgzOffsetMapFixup {}
 
-    //No idea
+    // Pointer Offset Table
     public class IGZ_ROFS : IGZ_Fixup {
         //No idea
     }

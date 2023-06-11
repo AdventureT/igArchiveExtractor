@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.Design;
 using IGAE_GUI.Types;
 
 namespace IGAE_GUI.IGZ
@@ -262,7 +263,7 @@ namespace IGAE_GUI.IGZ
 			}
 		}
 
-		void TextureExtract(object sender, EventArgs e)
+		void ExportTexture(object sender, EventArgs e)
 		{
 			using(SaveFileDialog sfd = new SaveFileDialog())
 			{
@@ -279,7 +280,7 @@ namespace IGAE_GUI.IGZ
 				}
 			}
 		}
-		void TextureReplace(object sender, EventArgs e)
+		void ImportTexture(object sender, EventArgs e)
 		{
 			using(OpenFileDialog ofd = new OpenFileDialog())
 			{
@@ -292,6 +293,25 @@ namespace IGAE_GUI.IGZ
 					int objectIndex = treeItems.SelectedNode.Parent.Nodes.IndexOf(treeItems.SelectedNode);
 					(_igz.objectList._objects[objectIndex] as igImage2).Replace(ifs);
 				}
+			}
+		}
+		
+		private void ExportAllObjects(object sender, EventArgs e) {
+			using var fbd = new FolderBrowserDialog();
+			if (fbd.ShowDialog() != DialogResult.OK) return;
+			// FIXME: a exporting interface would make this work better but whatever. The tool will be dead sooner rather than later hopefully anyways
+			
+			var exportDir = fbd.SelectedPath;
+			foreach (var key in unfiltered) {
+				var nodeName = key.ToString().Substring("TreeNode: ".Length);
+				var fileName = nodeName.Replace("\\", "/")[(nodeName.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+				var fullPath = exportDir + "/" + fileName;
+				
+				// FIXME: the only exportable thing from igae is textures. R.I.P igae Hope the new tool does well
+				if (igObjectMap[key] is not igImage2 image2) continue;
+				var ofs = new FileStream(fullPath.Replace(".png", ".dds"), FileMode.Create, FileAccess.Write);
+				image2.Extract(ofs);
+				ofs.Close();
 			}
 		}
 

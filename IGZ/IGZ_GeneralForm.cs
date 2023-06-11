@@ -308,11 +308,19 @@ namespace IGAE_GUI.IGZ
 				var fullPath = exportDir + "/" + fileName;
 				
 				// FIXME: the only exportable thing from igae is textures. R.I.P igae Hope the new tool does well
-				if (igObjectMap[key] is not igImage2 image2) continue;
-				var ofs = new FileStream(fullPath.Replace(".png", ".dds"), FileMode.Create, FileAccess.Write);
-				image2.Extract(ofs);
-				ofs.Close();
+				try {
+					if (igObjectMap[key] is not igImage2 image2) continue;
+					var ofs = new FileStream(fullPath.Replace(".png", ".dds"), FileMode.Create, FileAccess.Write);
+					image2.Extract(ofs);
+					ofs.Close();
+				}
+				catch (Exception) {
+					var message = "Exception Caught when exporting " + fileName;  
+					MessageBox.Show(message,  "Export All Progress", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				}
 			}
+			
+			MessageBox.Show("Exported all objects", "Export All Progress", MessageBoxButtons.OK, MessageBoxIcon.Hand);
 		}
 
 		void Save(object sender, EventArgs e)

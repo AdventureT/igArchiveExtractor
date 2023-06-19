@@ -36,14 +36,10 @@ namespace IGAE_GUI.IGA
 					{
 						realName = Path.GetDirectoryName(file.name) + file.names[i].Substring(file.names[i][1] == ':' ? 2 : 0);
 					}
-					string mode;
-					switch((file.localFileHeaders[i].mode & 0xFF) >> 24)
-					{
-						default:
-						case 0xFF:
-							mode = "Uncompressed";
-							break;
-					}
+
+					var mode = ((file.localFileHeaders[i].mode & 0xFF) >> 24) switch {
+						_ => "Uncompressed"
+					};
 					crc[i] = file.stream.ReadUInt32WithOffset((uint)IGA_Structure.headerData[file._version][(int)IGA_HeaderData.ChecksumLocation] + (uint)(i * 4u));
 					dgvItems.Rows.Add(realName, file.names[i], mode);
 				}
@@ -67,6 +63,8 @@ namespace IGAE_GUI.IGA
 					case IGA_Version.SkylandersImaginatorsPS4:
 						cbVersion.SelectedIndex = 11;
 						break;
+					case IGA_Version.SkylandersLostIslands:
+					case IGA_Version.CrashNST:
 					default:
 						MessageBox.Show("This version does not support rebuilding.", "Rebuild Not Supported", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign, false);
 						break;

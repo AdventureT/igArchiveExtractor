@@ -197,7 +197,6 @@ namespace IGAE_GUI.IGZ
 				
 				var name = igObject.offset.ToString("X04") + ": " + objectType;
 				if (igObject is igImage2) {
-					var nameTable = _igz.fixups.First(x => x.magicNumber == 0x52545352) as IGZ_RSTR;
 					try {
 						_igz.ebr.BaseStream.Seek(igObject.offset + 0x8, SeekOrigin.Begin); // seek to igImage 2 + 8
 						var namePointer = DeserializeOffset((int)_igz.ebr.ReadUInt32()); // read a uint32 and deserialize that

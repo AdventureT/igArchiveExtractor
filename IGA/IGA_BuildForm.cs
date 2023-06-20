@@ -8,7 +8,7 @@ namespace IGAE_GUI.IGA
 {
 	public partial class IGA_BuildForm : Form
 	{
-		uint[] crc;
+		uint[] fileHashes;
 		uint slop;
 		uint flags;
 		public IGA_BuildForm(IGA_File? file)
@@ -24,7 +24,7 @@ namespace IGAE_GUI.IGA
 
 			if(file != null)
 			{
-				crc = new uint[file.numberOfFiles];
+				fileHashes = new uint[file.numberOfFiles];
 				for(int i = 0; i < file.numberOfFiles; i++)
 				{
 					string realName = string.Empty;
@@ -34,13 +34,13 @@ namespace IGAE_GUI.IGA
 					}
 					else
 					{
-						realName = Path.GetDirectoryName(file.name) + file.names[i].Substring(file.names[i][1] == ':' ? 2 : 0);
+						realName = Path.GetDirectoryName(file.name) + file.names[i][(file.names[i][1] == ':' ? 2 : 0)..];
 					}
 
 					var mode = ((file.localFileHeaders[i].mode & 0xFF) >> 24) switch {
 						_ => "Uncompressed"
 					};
-					crc[i] = file.stream.ReadUInt32WithOffset((uint)IGA_Structure.headerData[file._version][(int)IGA_HeaderData.ChecksumLocation] + (uint)(i * 4u));
+					fileHashes[i] = file.stream.ReadUInt32WithOffset((uint)IGA_Structure.headerData[file._version][(int)IGA_HeaderData.ChecksumLocation] + (uint)(i * 4u));
 					dgvItems.Rows.Add(realName, file.names[i], mode);
 				}
 				switch(file._version)
@@ -117,7 +117,7 @@ namespace IGAE_GUI.IGA
 
 					if(cbVersion.SelectedIndex != -1)
 					{
-						fs.WriteLine($"{cbVersion.Items[cbVersion.SelectedIndex].ToString()},{slop.ToString()},{flags.ToString()}");
+						fs.WriteLine($"{cbVersion.Items[cbVersion.SelectedIndex]},{slop.ToString()},{flags.ToString()}");
 					}
 					else
 					{
@@ -135,7 +135,7 @@ namespace IGAE_GUI.IGA
 							//Semi colons aren't allowed so we're using them to deal with commas in vv's filenames
 							fs.Write($"{dgvItems.Rows[y].Cells[x].Value.ToString().Replace(',', ';')}{(x == (dgvItems.Columns.Count - 1) ? string.Empty : ",")}");
 						}
-						fs.Write($",{crc[y].ToString()}");
+						fs.Write($",{fileHashes[y].ToString()}");
 						fs.Write($"{(y == (dgvItems.Rows.Count - 2) ? string.Empty : "\n")}");
 					}
 					fs.Close();
@@ -186,7 +186,7 @@ namespace IGAE_GUI.IGA
 
 						dgvItems.Rows.Add(new string[3]{cells[0], cells[1], cells[2]});
 					}
-					crc = new uint[dgvItems.RowCount];
+					fileHashes = new uint[dgvItems.RowCount];
 					fs.DiscardBufferedData();
 					fs.BaseStream.Seek(0x00, SeekOrigin.Begin);
 					fs.ReadLine();									//Skip Metadata
@@ -198,12 +198,12 @@ namespace IGAE_GUI.IGA
 						//Console.WriteLine($"Reading CSV: {line}");
 						try
 						{
-							crc[i] = uint.Parse(txt);
+							fileHashes[i] = uint.Parse(txt);
 							Console.WriteLine($"Successfully read crc {i}");
 						}
 						catch(Exception ex)
 						{
-							crc = null;
+							fileHashes = null;
 							Console.WriteLine($"Failure reading crc {i}; error {ex.Message} \"{txt}\"");
 							break;
 						}
@@ -212,86 +212,83 @@ namespace IGAE_GUI.IGA
 				}
 			}
 		}
-		public void Build(object sender, EventArgs e)
-		{
-			using (SaveFileDialog saveFileDialog = new SaveFileDialog())
-			{
-				saveFileDialog.Filter = "iga files|*.arc;*.pak;*.bld;*.iga|All files (*.*)|*.*";
-				saveFileDialog.FilterIndex = 0;
-				saveFileDialog.RestoreDirectory = true;
 
-				if (saveFileDialog.ShowDialog() == DialogResult.OK)			//If the user selects a file
+		private void Build(object sender, EventArgs e) {
+			using var saveFileDialog = new SaveFileDialog();
+			saveFileDialog.Filter = "iga files|*.arc;*.pak;*.bld;*.iga|All files (*.*)|*.*";
+			saveFileDialog.FilterIndex = 0;
+			saveFileDialog.RestoreDirectory = true;
+
+			if (saveFileDialog.ShowDialog() != DialogResult.OK) return; //If the user selects a file
+			var internalFilenames = new string[dgvItems.RowCount - 1];
+			for(var i = 0; i < dgvItems.RowCount - 1; i++)
+			{
+				try
 				{
-					string[] internalFilenames = new string[dgvItems.RowCount - 1];
-					for(int i = 0; i < dgvItems.RowCount - 1; i++)
-					{
-						try
-						{
-							internalFilenames[i] = dgvItems.Rows[i].Cells[1].Value.ToString();
-						}
-						catch (NullReferenceException)
-						{
-							MessageBox.Show("Please fill in all boxes.", "Empty Boxes", MessageBoxButtons.OK, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign, false);
-						}
-					}
-					string[] realFileNames = new string[dgvItems.RowCount - 1];
-					for(int i = 0; i < dgvItems.RowCount - 1; i++)
-					{
-						try
-						{
-							realFileNames[i] = dgvItems.Rows[i].Cells[0].Value.ToString();
-						}
-						catch (NullReferenceException)
-						{
-							MessageBox.Show("Please fill in all boxes.", "Empty Boxes", MessageBoxButtons.OK, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign, false);
-						}
-					}
-					try
-					{
-						Console.WriteLine(realFileNames[0]);
-						Console.WriteLine(internalFilenames[0]);
-					}
-					catch(IndexOutOfRangeException)
-					{
-						MessageBox.Show("Please insert at least one row.", "No Files Selected", MessageBoxButtons.OK, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign, false);
-						return;
-					}
-					if(cbVersion.SelectedIndex == -1)
-					{
-						MessageBox.Show("Please Select a Version.", "No Version Selected", MessageBoxButtons.OK, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign, false);
-						return;
-					}
-					IGA_Version version = IGA_Version.SkylandersSpyrosAdventureWiiU;
-					switch(cbVersion.Items[cbVersion.SelectedIndex].ToString())
-					{
-						case "SSA Wii/3DS":
-						case "SG Alpha":
-						case "SG 3DS":
-						case "SSF 3DS":
-						case "STT 3DS":
-							version = IGA_Version.SkylandersSpyrosAdventureWii;
-							break;
-						case "SSA Wii U":
-						case "SG":
-						case "SSF Alpha":
-							version = IGA_Version.SkylandersSpyrosAdventureWiiU;
-							break;
-						case "SSF":
-							version = IGA_Version.SkylandersSwapForce;
-							break;
-						case "STT":
-							version = IGA_Version.SkylandersTrapTeam;
-							break;
-						case "SSC":
-							version = IGA_Version.SkylandersSuperChargers;
-							break;
-					}
-					IGA_File outputFile = new IGA_File(version, internalFilenames, crc);
-					outputFile.slop = slop;
-					outputFile.flags = flags;
-					outputFile.Build(saveFileDialog.FileName, realFileNames, true);
+					internalFilenames[i] = dgvItems.Rows[i].Cells[1].Value.ToString()!;
+				}
+				catch (NullReferenceException)
+				{
+					MessageBox.Show("Please fill in all boxes.", "Empty Boxes", MessageBoxButtons.OK, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign, false);
 				}
 			}
+			string[] realFileNames = new string[dgvItems.RowCount - 1];
+			for(int i = 0; i < dgvItems.RowCount - 1; i++)
+			{
+				try
+				{
+					realFileNames[i] = dgvItems.Rows[i].Cells[0].Value.ToString()!;
+				}
+				catch (NullReferenceException)
+				{
+					MessageBox.Show("Please fill in all boxes.", "Empty Boxes", MessageBoxButtons.OK, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign, false);
+				}
+			}
+			try
+			{
+				Console.WriteLine(realFileNames[0]);
+				Console.WriteLine(internalFilenames[0]);
+			}
+			catch(IndexOutOfRangeException)
+			{
+				MessageBox.Show("Please insert at least one row.", "No Files Selected", MessageBoxButtons.OK, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign, false);
+				return;
+			}
+			if(cbVersion.SelectedIndex == -1)
+			{
+				MessageBox.Show("Please Select a Version.", "No Version Selected", MessageBoxButtons.OK, MessageBoxIcon.Stop, MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign, false);
+				return;
+			}
+			var version = IGA_Version.SkylandersSpyrosAdventureWiiU;
+			switch(cbVersion.Items[cbVersion.SelectedIndex].ToString())
+			{
+				case "SSA Wii/3DS":
+				case "SG Alpha":
+				case "SG 3DS":
+				case "SSF 3DS":
+				case "STT 3DS":
+					version = IGA_Version.SkylandersSpyrosAdventureWii;
+					break;
+				case "SSA Wii U":
+				case "SG":
+				case "SSF Alpha":
+					version = IGA_Version.SkylandersSpyrosAdventureWiiU;
+					break;
+				case "SSF":
+					version = IGA_Version.SkylandersSwapForce;
+					break;
+				case "STT":
+					version = IGA_Version.SkylandersTrapTeam;
+					break;
+				case "SSC":
+					version = IGA_Version.SkylandersSuperChargers;
+					break;
+			}
+			var outputFile = new IGA_File(version, internalFilenames, fileHashes) {
+				slop = slop,
+				flags = flags
+			};
+			outputFile.Build(saveFileDialog.FileName, realFileNames, true);
 		}
 		void UpdateFlags(object sender, EventArgs e)
 		{

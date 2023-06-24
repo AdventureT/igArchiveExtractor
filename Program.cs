@@ -1,14 +1,15 @@
-﻿using System.Security.Cryptography.Pkcs;
-using IGAE_GUI;
+﻿using IGAE_GUI;
 using IGAE_GUI.IGZ;
+using IGAE_GUI.Types;
 
 namespace igArchiveExtractor;
 
 internal abstract class Program {
+    [STAThread]
     private static void Main(string[] args) {
         if (args.Length == 0) OpenGui();
         else {
-            Console.WriteLine("Igae CLI 0.0.1");
+            Console.WriteLine("Igae CLI 0.0.2");
             Console.WriteLine("Igae 1.0.7f by Juni. Forked modifications and CLI by hydos");
             var cmd = args[0];
             switch (cmd) {
@@ -17,6 +18,9 @@ internal abstract class Program {
                     break;
                 case "modifyFiles":
                     CmdModifyFiles(args[1..]);
+                    break;
+                case "extractTexture":
+                    CmdExtractTexture(args[1..]);
                     break;
                 default: {
                     DisplayHelpMessage(args[1..]);
@@ -48,8 +52,7 @@ internal abstract class Program {
                     Console.WriteLine(
                         "<game>: the shortened name of the game. For example: ssa, sg, ssf, stt, ssc, si, sli, crash");
                     Console.WriteLine("<igaFile>: the IGA you are trying to modify");
-                    Console.WriteLine(
-                        "<action>: this setting does absolutely nothing due to limitations with igae");
+                    Console.WriteLine("<action>: this setting does absolutely nothing due to limitations with igae");
                     break;
                 }
 
@@ -62,6 +65,7 @@ internal abstract class Program {
             Console.WriteLine("Available Commands:");
             Console.WriteLine("extractAll <platform> <game> <igaFile> <extractLocation>");
             Console.WriteLine("modifyFiles <platform> <game> <igaFile> <action> <inputDirectory> <outputIga>");
+            Console.WriteLine("extractTexture <igzFile> <igImage2Name> <outputTexturePath>");
             Console.WriteLine("help");
         }
     }
@@ -95,15 +99,42 @@ internal abstract class Program {
             Console.WriteLine(e);
             throw;
         }
-        
+
         Console.WriteLine("It worked maybe? Who knows with this damn tool");
+    }
+
+    private static long DeserializeOffset(IGZ_File igz, int offset) {
+        if (igz.version <= 0x06) return igz.descriptors[(offset >> 0x18) + 1].offset + (offset & 0x00FFFFFF);
+        return igz.descriptors[offset >> 0x1B].offset + ((offset & 0x07FFFFFF) + 1);
+    }
+
+    private static void CmdExtractTexture(IReadOnlyList<string> strings) {
+        var igzFile = new IGZ_File(new FileStream(strings[0], FileMode.Open, FileAccess.ReadWrite));
+        var igImage2Name = strings[1];
+        var outTexPath = strings[2];
+
+        foreach (var igObject in igzFile.objectList._objects.Where(igObject => igObject is igImage2)) {
+            igzFile.ebr.BaseStream.Seek(igObject.offset + 0x8, SeekOrigin.Begin); // seek to igImage 2 + 8
+            var name = igObject.offset.ToString("X04");
+            if (!name.Equals(igImage2Name)) {
+                Console.WriteLine(name + " is not a match :(");
+                continue;
+            }
+
+            Console.WriteLine("Extracting");
+            var ofs = new FileStream(outTexPath, FileMode.Create, FileAccess.Write);
+            (igObject as igImage2)?.Extract(ofs);
+            return;
+        }
+
+        Console.Error.WriteLine($"Failed to find a igImage2 matching the offset {igImage2Name}.");
     }
 
     private static uint HashFileName(string name, uint basis = 0x811c9dc5) {
         name = name.ToLower().Replace('\\', '/');
         return name.Aggregate(basis, (current, t) => (current ^ t) * 0x1000193);
     }
-    
+
     private static void CmdExtractAll(IReadOnlyList<string> strings) {
         if (strings.Count != 4) throw new Exception("Expected 4 arguments");
         var alchemyVersion = GetAlchemyIgaVersion(strings[0], strings[1]);

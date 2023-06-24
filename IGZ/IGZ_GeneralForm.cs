@@ -189,7 +189,7 @@ namespace IGAE_GUI.IGZ {
                             DeserializeOffset((int)_igz.ebr.ReadUInt32()); // read a uint32 and deserialize that
                         _igz.ebr.BaseStream.Seek(namePointer, SeekOrigin.Begin); // seek to that offset
                         var tmpName = _igz.ebr.ReadString(); // read a string
-                        if (tmpName.Length < 2)
+                        if (tmpName.Length < 5)
                             Console.WriteLine(tmpName + " is probably a bad name. falling back to offsets");
                         else name = tmpName;
                     }

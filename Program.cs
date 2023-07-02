@@ -9,7 +9,7 @@ internal abstract class Program {
     private static void Main(string[] args) {
         if (args.Length == 0) OpenGui();
         else {
-            Console.WriteLine("Igae CLI 0.0.2");
+            Console.WriteLine("Igae CLI 0.1.0");
             Console.WriteLine("Igae 1.0.7f by Juni. Forked modifications and CLI by hydos");
             var cmd = args[0];
             switch (cmd) {
@@ -21,6 +21,9 @@ internal abstract class Program {
                     break;
                 case "extractTexture":
                     CmdExtractTexture(args[1..]);
+                    break;
+                case "replaceTexture":
+                    CmdReplaceTexture(args[1..]);
                     break;
                 default: {
                     DisplayHelpMessage(args[1..]);
@@ -35,22 +38,17 @@ internal abstract class Program {
             switch (args[0]) {
                 case "extractAll": {
                     Console.WriteLine("extractAll <platform> <game> <igaFile> <extractLocation>");
-                    Console.WriteLine(
-                        "<platform>: the platform you want to read from. For example: wii, wiiu, ps4, ps3, switch, etc");
-                    Console.WriteLine(
-                        "<game>: the shortened name of the game. For example: ssa, sg, ssf, stt, ssc, si, sli, crash");
+                    Console.WriteLine("<platform>: the platform you want to read from. For example: wii, wiiu, ps4, ps3, switch, etc");
+                    Console.WriteLine("<game>: the shortened name of the game. For example: ssa, sg, ssf, stt, ssc, si, sli, crash");
                     Console.WriteLine("<igaFile>: the IGA you are trying to extract from");
                     Console.WriteLine("<extractLocation>: the location to extract the contents to");
                     break;
                 }
 
                 case "modifyFiles": {
-                    Console.WriteLine(
-                        "modifyFiles <platform> <game> <igaFile> <action> <replacementDirectory> <outputIga>");
-                    Console.WriteLine(
-                        "<platform>: the platform you want to read from. For example: wii, wiiu, ps4, ps3, switch, etc");
-                    Console.WriteLine(
-                        "<game>: the shortened name of the game. For example: ssa, sg, ssf, stt, ssc, si, sli, crash");
+                    Console.WriteLine("modifyFiles <platform> <game> <igaFile> <action> <replacementDirectory> <outputIga>");
+                    Console.WriteLine("<platform>: the platform you want to read from. For example: wii, wiiu, ps4, ps3, switch, etc");
+                    Console.WriteLine("<game>: the shortened name of the game. For example: ssa, sg, ssf, stt, ssc, si, sli, crash");
                     Console.WriteLine("<igaFile>: the IGA you are trying to modify");
                     Console.WriteLine("<action>: this setting does absolutely nothing due to limitations with igae");
                     break;
@@ -66,6 +64,7 @@ internal abstract class Program {
             Console.WriteLine("extractAll <platform> <game> <igaFile> <extractLocation>");
             Console.WriteLine("modifyFiles <platform> <game> <igaFile> <action> <inputDirectory> <outputIga>");
             Console.WriteLine("extractTexture <igzFile> <igImage2Name> <outputTexturePath>");
+            Console.WriteLine("replaceTexture <igzFile> <igImage2Name> <inputTexturePath>");
             Console.WriteLine("help");
         }
     }
@@ -108,6 +107,24 @@ internal abstract class Program {
         return igz.descriptors[offset >> 0x1B].offset + ((offset & 0x07FFFFFF) + 1);
     }
 
+    private static void CmdReplaceTexture(IReadOnlyList<string> strings) {
+        var igzFile = new IGZ_File(new FileStream(strings[0], FileMode.Open, FileAccess.ReadWrite));
+        var igImage2Name = strings[1];
+        var fs = new FileStream(strings[2], FileMode.Open, FileAccess.Read);
+        
+        foreach (var igObject in igzFile.objectList._objects.Where(igObject => igObject is igImage2)) {
+            igzFile.ebr.BaseStream.Seek(igObject.offset + 0x8, SeekOrigin.Begin); // seek to igImage 2 + 8
+            var name = igObject.offset.ToString("X04");
+            if (!name.Equals(igImage2Name)) continue;
+
+            Console.WriteLine("Replacing");
+            (igObject as igImage2)?.Replace(fs);
+            return;
+        }
+
+        Console.Error.WriteLine($"Failed to find a igImage2 matching the offset/name {igImage2Name}.");
+    }
+
     private static void CmdExtractTexture(IReadOnlyList<string> strings) {
         var igzFile = new IGZ_File(new FileStream(strings[0], FileMode.Open, FileAccess.ReadWrite));
         var igImage2Name = strings[1];
@@ -116,10 +133,7 @@ internal abstract class Program {
         foreach (var igObject in igzFile.objectList._objects.Where(igObject => igObject is igImage2)) {
             igzFile.ebr.BaseStream.Seek(igObject.offset + 0x8, SeekOrigin.Begin); // seek to igImage 2 + 8
             var name = igObject.offset.ToString("X04");
-            if (!name.Equals(igImage2Name)) {
-                Console.WriteLine(name + " is not a match :(");
-                continue;
-            }
+            if (!name.Equals(igImage2Name)) continue;
 
             Console.WriteLine("Extracting");
             var ofs = new FileStream(outTexPath, FileMode.Create, FileAccess.Write);
@@ -127,7 +141,7 @@ internal abstract class Program {
             return;
         }
 
-        Console.Error.WriteLine($"Failed to find a igImage2 matching the offset {igImage2Name}.");
+        Console.Error.WriteLine($"Failed to find a igImage2 matching the offset/name {igImage2Name}.");
     }
 
     private static uint HashFileName(string name, uint basis = 0x811c9dc5) {

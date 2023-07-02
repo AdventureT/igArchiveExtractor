@@ -258,17 +258,15 @@ namespace IGAE_GUI.IGZ {
             }
         }
 
-        void ImportTexture(object sender, EventArgs e) {
-            using (OpenFileDialog ofd = new OpenFileDialog()) {
-                ofd.RestoreDirectory = true;
-                ofd.Filter = "DirectDraw Surface Files (*.dds)|*.dds|All Files (*.*)|*.*";
+        private void ImportTexture(object sender, EventArgs e) {
+            using var ofd = new OpenFileDialog();
+            ofd.RestoreDirectory = true;
+            ofd.Filter = "DirectDraw Surface Files (*.dds)|*.dds|All Files (*.*)|*.*";
 
-                if (ofd.ShowDialog() == DialogResult.OK) {
-                    FileStream ifs = new FileStream(ofd.FileName, FileMode.Open, FileAccess.ReadWrite);
-                    int objectIndex = treeItems.SelectedNode.Parent.Nodes.IndexOf(treeItems.SelectedNode);
-                    (_igz.objectList._objects[objectIndex] as igImage2).Replace(ifs);
-                }
-            }
+            if (ofd.ShowDialog() != DialogResult.OK) return;
+            var ifs = new FileStream(ofd.FileName, FileMode.Open, FileAccess.ReadWrite);
+            var objectIndex = treeItems.SelectedNode.Parent.Nodes.IndexOf(treeItems.SelectedNode);
+            (_igz.objectList._objects[objectIndex] as igImage2)!.Replace(ifs);
         }
 
         private void ExportAllObjects(object sender, EventArgs e) {

@@ -64,7 +64,7 @@ internal abstract class Program {
             Console.WriteLine("extractAll <platform> <game> <igaFile> <extractLocation>");
             Console.WriteLine("modifyFiles <platform> <game> <igaFile> <action> <inputDirectory> <outputIga>");
             Console.WriteLine("extractTexture <igzFile> <igImage2Name> <outputTexturePath>");
-            Console.WriteLine("replaceTexture <igzFile> <igImage2Name> <inputTexturePath>");
+            Console.WriteLine("replaceTexture <igzFile> <igImage2Name> <inputTexturePath> <outputIgzPath>");
             Console.WriteLine("help");
         }
     }
@@ -108,9 +108,10 @@ internal abstract class Program {
     }
 
     private static void CmdReplaceTexture(IReadOnlyList<string> strings) {
+        if (strings.Count != 4) throw new Exception("Expected 4 arguments");
         var igzFile = new IGZ_File(new FileStream(strings[0], FileMode.Open, FileAccess.ReadWrite));
         var igImage2Name = strings[1];
-        var fs = new FileStream(strings[2], FileMode.Open, FileAccess.Read);
+        var imgFs = new FileStream(strings[2], FileMode.Open, FileAccess.Read);
         
         foreach (var igObject in igzFile.objectList._objects.Where(igObject => igObject is igImage2)) {
             igzFile.ebr.BaseStream.Seek(igObject.offset + 0x8, SeekOrigin.Begin); // seek to igImage 2 + 8
@@ -118,7 +119,12 @@ internal abstract class Program {
             if (!name.Equals(igImage2Name)) continue;
 
             Console.WriteLine("Replacing");
-            (igObject as igImage2)?.Replace(fs);
+            (igObject as igImage2)?.Replace(imgFs);
+            var outputIgzFs = new FileStream(strings[3], FileMode.Open, FileAccess.Write);
+            igzFile.ebr.BaseStream.Seek(0x00, SeekOrigin.Begin);
+            igzFile.ebr.BaseStream.CopyTo(outputIgzFs);
+            outputIgzFs.Flush();
+            outputIgzFs.Close();
             return;
         }
 
@@ -126,6 +132,7 @@ internal abstract class Program {
     }
 
     private static void CmdExtractTexture(IReadOnlyList<string> strings) {
+        if (strings.Count != 3) throw new Exception("Expected 3 arguments");
         var igzFile = new IGZ_File(new FileStream(strings[0], FileMode.Open, FileAccess.ReadWrite));
         var igImage2Name = strings[1];
         var outTexPath = strings[2];

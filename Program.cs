@@ -120,7 +120,7 @@ internal abstract class Program {
 
             Console.WriteLine("Replacing");
             (igObject as igImage2)?.Replace(imgFs);
-            var outputIgzFs = new FileStream(strings[3], FileMode.Open, FileAccess.Write);
+            var outputIgzFs = new FileStream(strings[3], FileMode.Create, FileAccess.Write);
             igzFile.ebr.BaseStream.Seek(0x00, SeekOrigin.Begin);
             igzFile.ebr.BaseStream.CopyTo(outputIgzFs);
             outputIgzFs.Flush();

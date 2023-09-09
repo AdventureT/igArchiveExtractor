@@ -268,7 +268,7 @@ namespace IGAE_GUI.IGZ {
             var objectIndex = treeItems.SelectedNode.Parent.Nodes.IndexOf(treeItems.SelectedNode);
             (_igz.objectList._objects[objectIndex] as igImage2)!.Replace(ifs);
         }
-
+        
         private void ExportAllObjects(object sender, EventArgs e) {
             using var fbd = new FolderBrowserDialog();
             if (fbd.ShowDialog() != DialogResult.OK) return;

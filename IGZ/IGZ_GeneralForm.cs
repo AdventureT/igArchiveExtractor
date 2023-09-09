@@ -176,9 +176,8 @@ namespace IGAE_GUI.IGZ {
                 //potentialParentNode = objects.Nodes.Add($"{i.ToString("X04")} : {(rvtb.offsets[i+1]).ToString("X08")} : {objs[i].length.ToString("X08")} => {objectType}");
 
                 long DeserializeOffset(int offset) {
-                    if (_igz.version <= 0x06)
-                        return _igz.descriptors[(offset >> 0x18) + 1].offset + (offset & 0x00FFFFFF);
-                    return _igz.descriptors[offset >> 0x1B].offset + ((offset & 0x07FFFFFF) + 1);
+                if(_igz.version <= 0x06) return (_igz.descriptors[(offset >> 0x18) + 1].offset + (offset & 0x00FFFFFF));
+                                    return (_igz.descriptors[(offset >> 0x1B) + 1].offset + (offset & 0x07FFFFFF));
                 }
 
                 var name = igObject.offset.ToString("X04") + ": " + objectType;
@@ -188,7 +187,7 @@ namespace IGAE_GUI.IGZ {
                         var namePointer =
                             DeserializeOffset((int)_igz.ebr.ReadUInt32()); // read a uint32 and deserialize that
                         _igz.ebr.BaseStream.Seek(namePointer, SeekOrigin.Begin); // seek to that offset
-                        var tmpName = _igz.ebr.ReadString(); // read a string
+                        var tmpName = igObject.offset.ToString("X04") + ": " + _igz.ebr.ReadString(); // read a string
                         if (tmpName.Length < 5)
                             Console.WriteLine(tmpName + " is probably a bad name. falling back to offsets");
                         else name = tmpName;
@@ -268,7 +267,7 @@ namespace IGAE_GUI.IGZ {
             var objectIndex = treeItems.SelectedNode.Parent.Nodes.IndexOf(treeItems.SelectedNode);
             (_igz.objectList._objects[objectIndex] as igImage2)!.Replace(ifs);
         }
-        
+
         private void ExportAllObjects(object sender, EventArgs e) {
             using var fbd = new FolderBrowserDialog();
             if (fbd.ShowDialog() != DialogResult.OK) return;

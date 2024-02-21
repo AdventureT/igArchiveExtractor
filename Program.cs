@@ -9,8 +9,8 @@ internal abstract class Program {
     private static void Main(string[] args) {
         if (args.Length == 0) OpenGui();
         else {
-            Console.WriteLine("Igae CLI 0.1.0");
-            Console.WriteLine("Igae 1.0.7f by Juni. Forked modifications and CLI by hydos");
+            Console.WriteLine("Igae CLI version who knows at this point. IgCauldron save me please");
+            Console.WriteLine("Igae 1.0.7f by Neffy. Forked modifications and CLI by hydos");
             var cmd = args[0];
             switch (cmd) {
                 case "extractAll":
@@ -24,6 +24,9 @@ internal abstract class Program {
                     break;
                 case "replaceTexture":
                     CmdReplaceTexture(args[1..]);
+                    break;
+                case "listFiles":
+                    CmdListFiles(args[1..]);
                     break;
                 default: {
                     DisplayHelpMessage(args[1..]);
@@ -65,6 +68,7 @@ internal abstract class Program {
             Console.WriteLine("modifyFiles <platform> <game> <igaFile> <action> <inputDirectory> <outputIga>");
             Console.WriteLine("extractTexture <igzFile> <igImage2Name> <outputTexturePath>");
             Console.WriteLine("replaceTexture <igzFile> <igImage2Name> <inputTexturePath> <outputIgzPath>");
+            Console.WriteLine("listFiles <platform> <game> <igaFile> <outputFile>");
             Console.WriteLine("help");
         }
     }
@@ -129,6 +133,28 @@ internal abstract class Program {
         }
 
         Console.Error.WriteLine($"Failed to find a igImage2 matching the offset/name {igImage2Name}.");
+    } 
+    
+    private static void CmdListFiles(IReadOnlyList<string> strings) {
+        if (strings.Count < 3) throw new Exception("Expected at least 3 arguments");
+        var alchemyVersion = GetAlchemyIgaVersion(strings[0], strings[1]);
+        var filePath = strings[2];
+        var archive = new IGA_File(filePath, alchemyVersion);
+        var saveToFile = strings.Count > 3;
+
+        if (saveToFile)
+        {
+            using var outputFile = new StreamWriter(strings[3]);
+            foreach (var line in archive.names)
+                outputFile.WriteLine(line);
+        }
+        else
+        {
+            foreach (var archiveName in archive.names)
+            {
+                Console.WriteLine(archiveName);
+            }
+        }
     }
 
     private static void CmdExtractTexture(IReadOnlyList<string> strings) {

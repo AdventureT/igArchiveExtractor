@@ -10,12 +10,12 @@ using SixLabors.ImageSharp.Processing;
 
 namespace IGAE_GUI.Utils {
     public static class TextureHelper {
-        private static readonly byte[] ddsHeader = new byte[0x80] {
+        private static readonly byte[] DdsHeader = {
             0x44, 0x44, 0x53, 0x20, // "DDS "
             0x7C, 0x00, 0x00, 0x00, // Version Info
             0x07, 0x10, 0x0A, 0x00, // More Version Info
-            0x00, 0x00, 0x00, 0x00, // Height
             0x00, 0x00, 0x00, 0x00, // Width
+            0x00, 0x00, 0x00, 0x00, // 
             0x00, 0x00, 0x00, 0x00, // Size
             0x00, 0x00, 0x00, 0x00, // 
             0x00, 0x00, 0x00, 0x00, // Mipmaps 
@@ -60,13 +60,13 @@ namespace IGAE_GUI.Utils {
         }
 
         public static void Extract(Stream src, Stream dst, int width, int height, uint size, uint mipmapCount, IGZ_TextureFormat format, bool leaveOpen = false) {
-            dst.Write(ddsHeader, 0x00, 0x80);
-            dst.Seek(0x0C, SeekOrigin.Begin);
+            dst.Write(DdsHeader, 0x00, 0x80);
+            dst.Seek(0x0C, SeekOrigin.Begin); // 12
             dst.Write(BitConverter.GetBytes((uint)height), 0x00, 0x04);
             dst.Write(BitConverter.GetBytes((uint)width), 0x00, 0x04);
             dst.Write(BitConverter.GetBytes(size), 0x00, 0x04);
             dst.Seek(0x1C, SeekOrigin.Begin);
-            dst.Write(BitConverter.GetBytes((uint)mipmapCount), 0x00, 0x04);
+            dst.Write(BitConverter.GetBytes(mipmapCount), 0x00, 0x04);
             dst.Seek(0x57, SeekOrigin.Begin);
             switch (SimplifyTextureFormat(format)) {
                 case IGZ_TextureFormat.dxt1:

@@ -218,8 +218,7 @@ namespace IGAE_GUI.IGZ {
                         else
                             offsets[i] = parent.descriptors[(int)(previousInt >> 0x1B) + 1].offset +
                                          (previousInt & 0x07FFFFFF);
-                        Console.WriteLine(
-                            $"Raw RVTB {i.ToString("X08")}: {previousInt.ToString("X08")} -> {offsets[i].ToString("X08")}");
+                        // Console.WriteLine($"Raw RVTB {i.ToString("X08")}: {previousInt.ToString("X08")} -> {offsets[i].ToString("X08")}");
                     }
                 }
             }

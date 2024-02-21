@@ -189,7 +189,9 @@ namespace IGAE_GUI.IGZ {
                         _igz.ebr.BaseStream.Seek(namePointer, SeekOrigin.Begin); // seek to that offset
                         var tmpName = igObject.offset.ToString("X04") + ": " + _igz.ebr.ReadString(); // read a string
                         if (tmpName.Length < 5)
-                            Console.WriteLine(tmpName + " is probably a bad name. falling back to offsets");
+                        {
+                        }
+                        // Console.WriteLine(tmpName + " is probably a bad name. falling back to offsets");
                         else name = tmpName;
                     }
                     catch (Exception) {

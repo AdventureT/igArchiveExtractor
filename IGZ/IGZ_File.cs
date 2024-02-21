@@ -113,9 +113,9 @@ namespace IGAE_GUI.IGZ
 			for(int i = 0; i < rvtb.count - 1; i++)
 			{
 				ebr.BaseStream.Seek(rvtb.offsets[i + 1], SeekOrigin.Begin);
-				Console.WriteLine($"Reading igObject at {(ebr.BaseStream.Position).ToString("X08")}");
+				// Console.WriteLine($"Reading igObject at {(ebr.BaseStream.Position).ToString("X08")}");
 
-				Console.WriteLine($"Name is index {objectList._objects[i].name.ToString("X08")}");
+				// Console.WriteLine($"Name is index {objectList._objects[i].name.ToString("X08")}");
 				if(tmet.typeNames[objectList._objects[i].name].Equals("igImage2"))
 				{
 					objectList._objects[i] = new igImage2(objectList._objects[i]);

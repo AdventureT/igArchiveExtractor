@@ -121,6 +121,12 @@ namespace IGAE_GUI.IGZ
 					objectList._objects[i] = new igImage2(objectList._objects[i]);
 					objectList._objects[i].ReadObjectFields();
 				}
+                
+				if(tmet.typeNames[objectList._objects[i].name].Equals("ScriptSet"))
+				{
+					objectList._objects[i] = new ScriptSet(objectList._objects[i]);
+					// objectList._objects[i].ReadObjectFields();
+				}
 			}
 		}
 		void ReadOldFixups()

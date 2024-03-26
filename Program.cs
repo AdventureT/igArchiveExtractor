@@ -28,12 +28,33 @@ internal abstract class Program {
                 case "listFiles":
                     CmdListFiles(args[1..]);
                     break;
+                case "createIgaCompactCSV":
+                    CmdCreateIgaCSV(args[1..]);
+                    break;
                 default: {
                     DisplayHelpMessage(args[1..]);
                     break;
                 }
             }
         }
+    }
+
+    private static void CmdCreateIgaCSV(IReadOnlyList<string> args)
+    {
+        if (args.Count < 3) throw new Exception("Expected at least 3 arguments");
+        var alchemyVersion = GetAlchemyIgaVersion(args[0], args[1]);
+        var filePath = args[2];
+        var archive = new IGA_File(filePath, alchemyVersion);
+        var outputFile = args[3];
+        
+        var fs = new StreamWriter(outputFile, false, System.Text.Encoding.ASCII);
+
+        for(var i = 0; i < archive.numberOfFiles - 1; i++)
+        {
+            var wtfJasleenOffset = archive.stream.ReadUInt32WithOffset(IGA_Structure.headerData[archive._version][(int)IGA_HeaderData.ChecksumLocation] + (uint)(i * 4u));
+            fs.WriteLine($"{archive.names[i]},{wtfJasleenOffset}");
+        }
+        fs.Close();
     }
 
     private static void DisplayHelpMessage(IReadOnlyList<string> args) {
@@ -58,7 +79,7 @@ internal abstract class Program {
                 }
 
                 default:
-                    Console.Error.WriteLine($"Couldn't help with the unknown command \"{args[0]}\"");
+                    Console.Error.WriteLine($"Couldn't help with the command \"{args[0]}\" :( Just ping me if you need help");
                     break;
             }
         }
@@ -69,6 +90,7 @@ internal abstract class Program {
             Console.WriteLine("extractTexture <igzFile> <igImage2Name> <outputTexturePath>");
             Console.WriteLine("replaceTexture <igzFile> <igImage2Name> <inputTexturePath> <outputIgzPath>");
             Console.WriteLine("listFiles <platform> <game> <igaFile> <outputFile>");
+            Console.WriteLine("createIgaCompactCSV <platform> <game> <igaFile> <outputCSVFile>");
             Console.WriteLine("help");
         }
     }

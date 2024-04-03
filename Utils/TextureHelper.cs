@@ -67,6 +67,7 @@ namespace IGAE_GUI.Utils {
             dst.Write(BitConverter.GetBytes(size), 0x00, 0x04);
             dst.Seek(0x1C, SeekOrigin.Begin);
             dst.Write(BitConverter.GetBytes(mipmapCount), 0x00, 0x04);
+            dst.Write(BitConverter.GetBytes((uint) format), 0x00, 0x04);
             dst.Seek(0x57, SeekOrigin.Begin);
             switch (SimplifyTextureFormat(format)) {
                 case IGZ_TextureFormat.dxt1:

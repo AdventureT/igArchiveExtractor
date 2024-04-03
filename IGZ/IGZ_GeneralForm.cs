@@ -129,7 +129,7 @@ namespace IGAE_GUI.IGZ {
 
             treeItems.Nodes.Add(fixups);
             treeItems.Nodes.Add(objects);
-            objects.Nodes.AddRange(unfiltered.ToArray());
+            objects.Nodes.AddRange(filtered.ToArray());
 
             Config config = Config.Read();
 

@@ -63,6 +63,7 @@ namespace IGAE_GUI.IGZ
 			this.cbFilterImages.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.cbFilterImages.Location = new System.Drawing.Point(500, 12);
 			this.cbFilterImages.Name = "cbFilterImages";
+			this.cbFilterImages.Checked = true;
 			this.cbFilterImages.Text = "Only igImage2s?";
 			this.cbFilterImages.Size = new System.Drawing.Size(100, 23);
 			this.cbFilterImages.TabIndex = 10;

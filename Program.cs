@@ -49,7 +49,7 @@ internal abstract class Program {
         
         var fs = new StreamWriter(outputFile, false, System.Text.Encoding.ASCII);
 
-        for(var i = 0; i < archive.numberOfFiles - 1; i++)
+        for(var i = 0; i < archive.numberOfFiles; i++)
         {
             var wtfJasleenOffset = archive.stream.ReadUInt32WithOffset(IGA_Structure.headerData[archive._version][(int)IGA_HeaderData.ChecksumLocation] + (uint)(i * 4u));
             fs.WriteLine($"{archive.names[i]},{wtfJasleenOffset}");

@@ -75,12 +75,18 @@ namespace IGAE_GUI
 				localFileHeaders[i].mode = stream.ReadUInt32WithOffset(IGA_Structure.headerData[_version][(uint)IGA_HeaderData.ChecksumLocation] + IGA_Structure.headerData[_version][(uint)IGA_HeaderData.ChecksumLength] * numberOfFiles + IGA_Structure.headerData[_version][(uint)IGA_HeaderData.LocalHeaderLength] * i + IGA_Structure.headerData[_version][(uint)IGA_HeaderData.ModeInLocal]);
 				localFileHeaders[i].path = names[i];
 				localFileHeaders[i].chunkPropertiesOffset = localFileHeaders[i].mode & 0xFFFFFF;
-
-				//For some reason the 3ds games have mode 0x10000000 as lzma whereas ssf has it as 0x20000000, so yeah this exists to make that work
-				if (_version == IGA_Version.SkylandersSpyrosAdventureWii && (this.localFileHeaders[i].mode & 0x10000000) != 0)
-				{
-					localFileHeaders[i].mode += 0x10000000;
+				
+				// I apologise for this mess
+				if (_version == IGA_Version.SkylandersSpyrosAdventureWii) {
+					//For some reason the 3ds games have mode 0x10000000 as lzma whereas ssf has it as 0x20000000, so yeah this exists to make that work
+					if (name.EndsWith(".bld") && (localFileHeaders[i].mode & 0x10000000) != 0) {
+						localFileHeaders[i].mode += 0x10000000;
+					}else if (name.EndsWith(".arc") && localFileHeaders[i].mode == 0x10000000) {
+						localFileHeaders[i].mode = 0x20000000;
+					}
 				}
+				
+
 
 				localFileHeaders[i].index = i;
 			}

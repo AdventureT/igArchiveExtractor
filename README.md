@@ -1,6 +1,8 @@
 # igArchiveExtractor
 
-![igArchiveExtractor Logo](https://media.discordapp.net/attachments/852283501738065951/884608132016394240/image0.png?width=300&height=300)
+![igArchiveExtractor Logo](https://raw.githubusercontent.com/NefariousTechSupport/igArchiveExtractor/no-msbuild/igae.ico)
+
+**igArchiveExtractor IS DISCONTINUED, THIS REPO WILL REMAIN OPEN UNTIL A GOOD ALTERNATIVE ARRIVES, NO NEW FEATURES WILL BE ADDED**
 
 A GUI tool for extracting files from .arc/.bld/.pak files from various games made with the Vicarious Visions Alchemy game engine
 

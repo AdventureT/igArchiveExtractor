@@ -78,6 +78,13 @@ namespace IGAE_GUI.Types
 			_container.ebr.BaseStream.Seek(textureOffset, SeekOrigin.Begin);
 			IGAE_GUI.Utils.TextureHelper.Replace(input, _container.ebr.BaseStream, width, height, textureSize, mipmapCount, format);
 			input.Close();
-		}
-	}
+        }
+		
+        public void ReplaceDDS(Stream input)
+        {
+            _container.ebr.BaseStream.Seek(textureOffset, SeekOrigin.Begin);
+            IGAE_GUI.Utils.TextureHelper.ReplaceDDS(input, _container.ebr.BaseStream, width, textureSize, format);
+            input.Close();
+        }
+    }
 }

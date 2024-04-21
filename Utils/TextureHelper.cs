@@ -247,6 +247,72 @@ namespace IGAE_GUI.Utils {
             dst.Flush();
         }
 
+        public static void ReplaceDDS(Stream src, Stream dst, int width, uint size, IGZ_TextureFormat format)
+        {
+            Console.WriteLine(format);
+            IGZ_TextureFormat simpleFormat = SimplifyTextureFormat(format);
+            src.Seek(0x80, SeekOrigin.Begin);
+            byte[] data = new byte[size];
+            src.Read(data, 0x00, (int)size);
+            int stride = (simpleFormat == IGZ_TextureFormat.dxt1 ? 0x08 : 0x10);
+            //Swizzle data if needed
+            for (int i = 0; i < size; i += stride)
+            {
+                if (format.ToString().EndsWith("_big_wii"))
+                {
+                    //width must be rounded up to nearest 4 cos dxt
+                    int alignedWidth = ((width + 3) / 4) * 4;
+
+                    //if we wanted the actual x and y block indexes we would've used (width >> 2) but since 2x2 sets of blocks are stored as 4x1 sets of blocks, we pretend the image is double the width
+                    int xindex = ((i / stride) % (alignedWidth >> 1)) >> 1;
+                    int yindex = ((i / stride) / (alignedWidth >> 1)) << 1;
+
+                    //Index of the first 2 blocks
+                    int index0 = (xindex + yindex * (alignedWidth >> 2)) * stride;
+                    //Index of the second 2 blocks
+                    int index1 = (xindex + (yindex + 1) * (alignedWidth >> 2)) * stride;
+
+                    //Copy the current group of blocks
+                    byte[] currentBlocks = new byte[stride * 4];
+                    Array.Copy(data, index0, currentBlocks, 0, stride * 2);
+                    Array.Copy(data, index1, currentBlocks, 2 * stride, stride * 2);
+
+                    //Flipping the pixels within each block horizontally
+                    for (int j = 0; j < currentBlocks.Length; j += 8)
+                    {
+                        byte[] currentRow = new byte[4];
+                        Array.Copy(currentBlocks, j + 4, currentRow, 0, 4);
+                        for (int k = 0; k < 4; k++)
+                        {
+                            currentRow[k] = (byte)(((currentRow[k] & 3) << 6) | ((currentRow[k] & 12) << 2) | ((currentRow[k] & 48) >> 2) | ((currentRow[k] & 192) >> 6));
+                        }
+
+                        Array.Copy(currentRow, 0, currentBlocks, j + 4, 4);
+                    }
+
+                    //Unfixing the endianness of the 2 r5g6b5 colours
+                    for (int j = 0; j < 4; j++)
+                    {
+                        Array.Reverse(currentBlocks, stride * j + 0, 2);
+                        Array.Reverse(currentBlocks, stride * j + 2, 2);
+                    }
+
+                    //Write the swizzled data to the destination
+                    dst.Write(currentBlocks, 0x00, stride * 4);
+
+                    //We dealt with 4 blocks instead of 1 so here we make sure the for loop doesn't run more than it has to
+                    i += stride * 3;
+                }
+                else
+                {
+                    dst.Write(data, i, stride);
+                }
+            }
+
+            src.Close();
+            dst.Flush();
+        }
+
         public static IGZ_TextureFormat SimplifyTextureFormat(IGZ_TextureFormat format) {
             switch (format) {
                 case IGZ_TextureFormat.dxt1:

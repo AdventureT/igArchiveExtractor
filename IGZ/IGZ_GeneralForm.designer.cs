@@ -35,7 +35,8 @@ namespace IGAE_GUI.IGZ
 			this.btnSaveAllObjects = new System.Windows.Forms.Button();
 			this.btnTextureExtract = new System.Windows.Forms.Button();
 			this.btnTextureReplace = new System.Windows.Forms.Button();
-			this.btnSaveIGZ = new System.Windows.Forms.Button();
+            this.btnTextureReplaceDDS = new System.Windows.Forms.Button();
+            this.btnSaveIGZ = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			//
 			// treeItems
@@ -101,10 +102,21 @@ namespace IGAE_GUI.IGZ
 			this.btnTextureReplace.Text = "Replace";
 			this.btnTextureReplace.UseVisualStyleBackColor = true;
 			this.btnTextureReplace.Click += new System.EventHandler(this.ImportTexture);
-			// 
-			// btnSaveIGZ
-			// 
-			this.btnSaveIGZ.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            // 
+            // btnTextureReplaceDDS
+            // 
+            this.btnTextureReplaceDDS.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnTextureReplaceDDS.Location = new System.Drawing.Point(613, 38);
+            this.btnTextureReplaceDDS.Name = "btnTextureReplaceDDS";
+            this.btnTextureReplaceDDS.Size = new System.Drawing.Size(75, 23);
+            this.btnTextureReplaceDDS.TabIndex = 4;
+            this.btnTextureReplaceDDS.Text = "Replace Whole DDS";
+            this.btnTextureReplaceDDS.UseVisualStyleBackColor = true;
+            this.btnTextureReplaceDDS.Click += new System.EventHandler(this.ImportDDSTexture);
+            // 
+            // btnSaveIGZ
+            // 
+            this.btnSaveIGZ.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.btnSaveIGZ.Location = new System.Drawing.Point(613, 12);
 			this.btnSaveIGZ.Name = "btnSaveIGZ";
 			this.btnSaveIGZ.Size = new System.Drawing.Size(75, 23);
@@ -124,7 +136,8 @@ namespace IGAE_GUI.IGZ
 			this.Controls.Add(this.btnSaveAllObjects);
 			this.Controls.Add(this.btnTextureExtract);
 			this.Controls.Add(this.btnTextureReplace);
-			this.Controls.Add(this.btnSaveIGZ);
+            this.Controls.Add(this.btnTextureReplaceDDS);
+            this.Controls.Add(this.btnSaveIGZ);
 			this.Name = "Form_igzGeneral";
 			this.Text = "IGZ Viewer";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Closing);
@@ -140,6 +153,7 @@ namespace IGAE_GUI.IGZ
 		public System.Windows.Forms.Button btnSaveAllObjects;
 		public System.Windows.Forms.Button btnTextureExtract;
 		public System.Windows.Forms.Button btnTextureReplace;
-		public System.Windows.Forms.Button btnSaveIGZ;
+        public System.Windows.Forms.Button btnTextureReplaceDDS;
+        public System.Windows.Forms.Button btnSaveIGZ;
 	}
 }

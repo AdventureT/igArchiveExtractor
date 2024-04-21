@@ -10,7 +10,7 @@ internal abstract class Program {
         if (args.Length == 0) OpenGui();
         else {
             Console.WriteLine("Igae CLI version who knows at this point. IgCauldron save me please");
-            Console.WriteLine("Igae 1.0.7f by Neffy. Forked modifications and CLI by hydos");
+            Console.WriteLine("Igae 1.0.7f by Neffy. Forked modifications and CLI by hydos & Glitched Gamer");
             var cmd = args[0];
             switch (cmd) {
                 case "extractAll":
@@ -24,6 +24,9 @@ internal abstract class Program {
                     break;
                 case "replaceTexture":
                     CmdReplaceTexture(args[1..]);
+                    break;
+                case "fullyReplaceTexture":
+                    CmdReplaceWholeDDSTexture(args[1..]);
                     break;
                 case "listFiles":
                     CmdListFiles(args[1..]);
@@ -89,6 +92,7 @@ internal abstract class Program {
             Console.WriteLine("modifyFiles <platform> <game> <igaFile> <action> <inputDirectory> <outputIga>");
             Console.WriteLine("extractTexture <igzFile> <igImage2Name> <outputTexturePath>");
             Console.WriteLine("replaceTexture <igzFile> <igImage2Name> <inputTexturePath> <outputIgzPath>");
+            Console.WriteLine("fullyReplaceTexture <igzFile> <igImage2Name> <inputTexturePath> <outputIgzPath>");
             Console.WriteLine("listFiles <platform> <game> <igaFile> <outputFile>");
             Console.WriteLine("createIgaCompactCSV <platform> <game> <igaFile> <outputCSVFile>");
             Console.WriteLine("help");
@@ -155,7 +159,31 @@ internal abstract class Program {
         }
 
         Console.Error.WriteLine($"Failed to find a igImage2 matching the offset/name {igImage2Name}.");
-    } 
+    }
+    
+    private static void CmdReplaceWholeDDSTexture(IReadOnlyList<string> strings) {
+        if (strings.Count != 4) throw new Exception("Expected 4 arguments");
+        var igzFile = new IGZ_File(new FileStream(strings[0], FileMode.Open, FileAccess.ReadWrite));
+        var igImage2Name = strings[1];
+        var imgFs = new FileStream(strings[2], FileMode.Open, FileAccess.Read);
+        
+        foreach (var igObject in igzFile.objectList._objects.Where(igObject => igObject is igImage2)) {
+            igzFile.ebr.BaseStream.Seek(igObject.offset + 0x8, SeekOrigin.Begin); // seek to igImage 2 + 8
+            var name = igObject.offset.ToString("X04");
+            if (!name.Equals(igImage2Name)) continue;
+
+            Console.WriteLine("Replacing");
+            (igObject as igImage2)?.ReplaceDDS(imgFs);
+            var outputIgzFs = new FileStream(strings[3], FileMode.Create, FileAccess.Write);
+            igzFile.ebr.BaseStream.Seek(0x00, SeekOrigin.Begin);
+            igzFile.ebr.BaseStream.CopyTo(outputIgzFs);
+            outputIgzFs.Flush();
+            outputIgzFs.Close();
+            return;
+        }
+
+        Console.Error.WriteLine($"Failed to find a igImage2 matching the offset/name {igImage2Name}.");
+    }
     
     private static void CmdListFiles(IReadOnlyList<string> strings) {
         if (strings.Count < 3) throw new Exception("Expected at least 3 arguments");

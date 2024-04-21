@@ -246,7 +246,8 @@ namespace IGAE_GUI.Utils {
             oms.Close();
             dst.Flush();
         }
-
+        
+        // Glitched Gamer wrote this
         public static void ReplaceDDS(Stream src, Stream dst, int width, uint size, IGZ_TextureFormat format)
         {
             Console.WriteLine(format);

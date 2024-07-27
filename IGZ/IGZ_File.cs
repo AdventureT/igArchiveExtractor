@@ -113,13 +113,19 @@ namespace IGAE_GUI.IGZ
 			for(int i = 0; i < rvtb.count - 1; i++)
 			{
 				ebr.BaseStream.Seek(rvtb.offsets[i + 1], SeekOrigin.Begin);
-				Console.WriteLine($"Reading igObject at {(ebr.BaseStream.Position).ToString("X08")}");
+				// Console.WriteLine($"Reading igObject at {(ebr.BaseStream.Position).ToString("X08")}");
 
-				Console.WriteLine($"Name is index {objectList._objects[i].name.ToString("X08")}");
+				// Console.WriteLine($"Name is index {objectList._objects[i].name.ToString("X08")}");
 				if(tmet.typeNames[objectList._objects[i].name].Equals("igImage2"))
 				{
 					objectList._objects[i] = new igImage2(objectList._objects[i]);
 					objectList._objects[i].ReadObjectFields();
+				}
+                
+				if(tmet.typeNames[objectList._objects[i].name].Equals("ScriptSet"))
+				{
+					objectList._objects[i] = new ScriptSet(objectList._objects[i]);
+					// objectList._objects[i].ReadObjectFields();
 				}
 			}
 		}
@@ -185,6 +191,13 @@ namespace IGAE_GUI.IGZ
 						mtsz.magicNumber = 0x4D54535A;
 						fixups.Add(mtsz);
 						break;
+					case 0x0E: {
+						IGZ_RSTR rstr = new IGZ_RSTR();
+						rstr.Process(ebr, this);
+						rstr.magicNumber = 0x52545352;
+						fixups.Add(rstr);
+						break;
+					}
 					//case 0x0D: (Unknown, Couldn't find any uses)
 					//case 0x0E: (Unknown, Packed Ints)
 					//case 0x0F: (Unknown, Packed Ints)

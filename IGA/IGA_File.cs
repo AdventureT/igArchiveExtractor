@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using SevenZip.Compression.LZMA;
 using HashDepot;
+using System.Collections;
 
 namespace IGAE_GUI
 {
@@ -26,10 +27,15 @@ namespace IGAE_GUI
 		StreamHelper.Endianness outputEndianess = StreamHelper.Endianness.Little;
 
 		public IGA_File(string filepath, IGA_Version version)
-		{
-			FileStream fs = new FileStream(filepath, FileMode.Open, FileAccess.Read);
+        {
+            MemoryStream fs = new MemoryStream();
+            FileStream ts = new FileStream(filepath, FileMode.Open, FileAccess.Read);
+            ts.CopyTo(fs);
+            ts.Close();
+            ts.Dispose();
+            fs.Seek(0, SeekOrigin.Begin);
 
-			name = filepath;
+            name = filepath;
 
 			byte[] magicNumber = new byte[4];
 
@@ -75,12 +81,18 @@ namespace IGAE_GUI
 				localFileHeaders[i].mode = stream.ReadUInt32WithOffset(IGA_Structure.headerData[_version][(uint)IGA_HeaderData.ChecksumLocation] + IGA_Structure.headerData[_version][(uint)IGA_HeaderData.ChecksumLength] * numberOfFiles + IGA_Structure.headerData[_version][(uint)IGA_HeaderData.LocalHeaderLength] * i + IGA_Structure.headerData[_version][(uint)IGA_HeaderData.ModeInLocal]);
 				localFileHeaders[i].path = names[i];
 				localFileHeaders[i].chunkPropertiesOffset = localFileHeaders[i].mode & 0xFFFFFF;
-
-				//For some reason the 3ds games have mode 0x10000000 as lzma whereas ssf has it as 0x20000000, so yeah this exists to make that work
-				if (_version == IGA_Version.SkylandersSpyrosAdventureWii && (this.localFileHeaders[i].mode & 0x10000000) != 0)
-				{
-					localFileHeaders[i].mode += 0x10000000;
+				
+				// I apologise for this mess
+				if (_version == IGA_Version.SkylandersSpyrosAdventureWii) {
+					//For some reason the 3ds games have mode 0x10000000 as lzma whereas ssf has it as 0x20000000, so yeah this exists to make that work
+					if (name.EndsWith(".bld") && (localFileHeaders[i].mode & 0x10000000) != 0) {
+						localFileHeaders[i].mode += 0x10000000;
+					}else if (name.EndsWith(".arc") && localFileHeaders[i].mode == 0x10000000) {
+						localFileHeaders[i].mode = 0x20000000;
+					}
 				}
+				
+
 
 				localFileHeaders[i].index = i;
 			}
@@ -388,12 +400,12 @@ namespace IGAE_GUI
 				{
 					inputFiles[i] = Path.GetDirectoryName(name) + names[i].Substring(names[i][1] == ':' ? 2 : 0);
 				}
-			}
-			Build(output, inputFiles, showCompleteBox);
+            }
+            Build(output, inputFiles, showCompleteBox);
 		}
 		public unsafe void Build(string output, string[] inputFiles, bool showCompleteBox = false)
-		{
-			FileStream ofs = new FileStream(output, FileMode.Create, FileAccess.ReadWrite);
+        {
+            FileStream ofs = new FileStream(output, FileMode.Create, FileAccess.ReadWrite);
 			StreamHelper osh = new StreamHelper(ofs);
 			osh._endianness = outputEndianess;
 
@@ -489,10 +501,10 @@ namespace IGAE_GUI
 			{
 				System.Windows.Forms.MessageBox.Show("Build Complete!");
 			}
-		}
-		
-		//Credit goes to DTZxPorter for this function and HashSearcher
-		private uint CalculateSlop()
+        }
+
+        //Credit goes to DTZxPorter for this function and HashSearcher
+        private uint CalculateSlop()
 		{
 			var HashBuffer = new byte[numberOfFiles * 4];
 			var HashStaging = new List<uint>();

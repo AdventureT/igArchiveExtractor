@@ -16,3 +16,6 @@ obj
 *.arc
 *.bld
 *.pak
+
+# Rider and other Jetbrains IDE's Cache files
+.idea/
